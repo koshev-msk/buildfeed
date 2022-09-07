@@ -111,7 +111,7 @@ run_build(){
 
 # Remove sdk dir packages and logs
 clean_sdk(){
-	rm -rf sdk-* openwrt-sdk-* $OUTPUT_DIR/packages/ logs/
+	rm -rf sdk-* logs/
 }
 
 # remove all 
@@ -133,6 +133,7 @@ case $1 in
 			PLATFORM=$t
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
+			clean_sdk
 		done
 	;;
 	-c) clean_sdk ;;
