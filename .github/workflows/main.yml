@@ -43,7 +43,8 @@ jobs:
         run: |
           rm -rf ./artifact/
           mkdir -p ./artifact/
-          cp ./packages/ ./artifact/
+          cp -rp ./packages/ ./artifact/
+          cp -rp ./logs/ ./artifact/
       - name: Upload artifact
         uses: actions/upload-artifact@master
         with:
