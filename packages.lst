@@ -3,3 +3,7 @@ luci-app-smstools3
 luci-app-modeminfo
 luci-app-mmconfig
 luci-app-cellled
+luci-app-3proxy
+qtools
+ethstatus
+asterisk-chan-quectel
