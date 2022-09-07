@@ -111,7 +111,7 @@ run_build(){
 
 # Remove sdk dir packages and logs
 clean_sdk(){
-	rm -rf sdk-* logs/
+	rm -rf sdk-*
 }
 
 # remove all 
