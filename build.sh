@@ -89,7 +89,7 @@ run_build(){
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "Prepare compile packages $PLATFORM $SOC."
 	make defconfig >/dev/null && echo " Done!" || echo " Fail."
-	if [ $SDK_FEEDS - eq 1 ]; then
+	if [ $SDK_FEEDS -eq 1 ]; then
 		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $1}')"
 	fi
 	for f in $FEEDS; do
