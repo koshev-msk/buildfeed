@@ -39,14 +39,14 @@ jobs:
         run: |
           touch dep_installed
           ./build.sh -g
-      - name: Assemble artifact
+      - name: Assemble repository to artifact
         run: |
           rm -rf ./artifact/
           mkdir -p ./artifact/
           cp -rp ./packages/ ./artifact/
           cp -rp ./logs/ ./artifact/
-      - name: Upload artifact
+      - name: Upload repository to artifact
         uses: actions/upload-artifact@master
         with:
-          name: OpenWrt firmware
+          name: openwrt-repository
           path: ./artifact/
