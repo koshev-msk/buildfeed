@@ -12,7 +12,7 @@ LOG=0
 
 # Script settings
 if [ -f packages.lst ]; then
-	PACKAGES="$(cat packages.lst)"
+	PACKAGES="$(grep -v '^#' packages.lst)"
 fi
 # Muliplie arch build
 # db stored in file platfomrs.cfg
