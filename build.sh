@@ -159,6 +159,7 @@ case $1 in
 			PLATFORM=$t
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
+			JOB=$(($JOB+1))
 		done
 	;;
 	-g)
@@ -173,6 +174,7 @@ case $1 in
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
 			rm -rf sdk-*
+			JOB=$(($JOB+1))
 		done
 	;;
 	-c) clean_sdk ;;
