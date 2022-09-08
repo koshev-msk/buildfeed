@@ -86,7 +86,7 @@ run_build(){
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "Prepare compile packages $PLATFORM $SOC."
-	make defconfig >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	make defconfig >/dev/null && echo " Done!" || echo " Fail."
 	for f in $FEEDS; do
 		mkdir -p ../logs/$PLATFORM/$f/
 		if [ ! "$PACKAGES" ]; then
@@ -98,7 +98,7 @@ run_build(){
 				if [ $LOG -eq 1 ]; then
 					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null && echo " Done!" || echo " Fail."
 				else
-					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null && echo " Done!" || echo " Fail."
+					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null && echo " Done!" || echo " Fail."
 				fi
 			fi
 		done
