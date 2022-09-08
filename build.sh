@@ -16,9 +16,6 @@ SDK_FEEDS=0
 if [ -f packages.lst ]; then
 	PACKAGES="$(grep -v '^#' packages.lst)"
 fi
-# Muliplie arch build
-# db stored in file platfomrs.cfg
-TARGETS="$(grep -v '^#' platforms.cfg | awk '{print $1}')"
 # repositories list
 FEEDS="$(grep -v '^#' feeds.cfg | awk '{print $1}')"
 
@@ -155,13 +152,15 @@ case $1 in
 			exit 0
 		fi
 		JOB=1
-		for t in $TARGETS; do
-			echo "======= JOB: $JOB ======="
-			PLATFORM=$t
-			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
-			run_build
-			JOB=$(($JOB+1))
-		done
+		while read line; do
+			if [[ "$line" != \#* ]]; then
+				echo "======= JOB: $JOB ======="
+				PLATFORM=$(echo $line | awk '{print $1}')
+				SOC=$(echo $line | awk '{print $2}')
+				run_build
+				JOB=$(($JOB+1))
+			fi
+		done  < platforms.cfg
 	;;
 	-g)
 		if [ ! -f platforms.cfg ]; then
@@ -169,14 +168,16 @@ case $1 in
 			exit 0
 		fi
 		JOB=1
-		for t in $TARGETS; do
-			echo "======= JOB: $JOB ======="
-			PLATFORM=$t
-			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
-			run_build
-			rm -rf sdk-*
-			JOB=$(($JOB+1))
-		done
+		while read line; do
+			if [[ "$line" != \#* ]]; then
+				echo "======= JOB: $JOB ======="
+				PLATFORM=$(echo $line | awk '{print $1}')
+				SOC=$(echo $line | awk '{print $2}')
+				run_build
+				rm -rf sdk-*
+				JOB=$(($JOB+1))
+			fi
+		done < platforms.cfg
 	;;
 	-c) clean_sdk ;;
 	-r) clean_all ;;
