@@ -9,6 +9,8 @@ RELEASE=21.02.3
 OUTPUT_DIR="./"
 # Verbose log
 LOG=0
+# Include SDK feeds
+SDK_FEEDS=0
 
 # Script settings
 if [ -f packages.lst ]; then
@@ -87,6 +89,9 @@ run_build(){
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "Prepare compile packages $PLATFORM $SOC."
 	make defconfig >/dev/null && echo " Done!" || echo " Fail."
+	if [ $SDK_FEEDS - eq 1 ]; then
+		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $1}')"
+	fi
 	for f in $FEEDS; do
 		mkdir -p ../logs/$PLATFORM/$f/
 		if [ ! "$PACKAGES" ]; then
@@ -96,9 +101,9 @@ run_build(){
 			if [ -n package/feeds/${f}/${p} ]; then
 				echo -n "Compile package: ${p}."
 				if [ $LOG -eq 1 ]; then
-					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null && echo " Done!" || echo " Fail."
+					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
 				else
-					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null && echo " Done!" || echo " Fail."
+					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
 				fi
 			fi
 		done
