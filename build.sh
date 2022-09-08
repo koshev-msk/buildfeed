@@ -94,10 +94,11 @@ run_build(){
 		fi
 		for p in $PACKAGES; do
 			if [ -n package/feeds/${f}/${p} ]; then
+				echo -n "Compile package: ${p}."
 				if [ $LOG -eq 1 ]; then
-					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 				else
-					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 				fi
 			fi
 		done
