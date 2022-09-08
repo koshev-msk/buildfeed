@@ -189,3 +189,6 @@ case $1 in
 		-r -- remove sdk, packages, keys, dependies"
 	;;
 esac
+# Restore env PATH
+export PATH=${DEFPATH}
+#
