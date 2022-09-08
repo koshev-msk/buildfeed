@@ -55,10 +55,11 @@ run_build(){
 	fi
 	if [ ! -d sdk-$RELEASE-$PLATFORM-$SOC ];  then
 		SDKFILE=$(curl -s https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/ --list-only | sed -e 's/<[^>]*>/ /g' | awk '/openwrt-sdk/{print $1}')
-		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE
+		echo -n "Download $SDKFILE."
+		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 		if [ $LOG -eq 0 ]; then
 			echo -n "Unpack SDK."
-			tar xf *.tar.xz* && echo "Done!" || echo "Fail."
+			tar xf *.tar.xz* && echo " Done!" || echo " Fail."
 		else
 			tar xvf *.tar.xz* 
 		fi
@@ -76,12 +77,15 @@ run_build(){
 		FEED_URL=$(cat feeds.cfg | grep -v '^#' | awk '{print $2}')
 		echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	done
-	# update feeds
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a
+	# update and install feeds
+	echo -n "Update all feeds SDK $PLATFORM $SOC."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	echo -n "Install all feeds SDK $PLATFORM $SOC."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
-	make defconfig
+	echo -n "Prepare compile packages $PLATFORM $SOC."
+	make defconfig >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	for f in $FEEDS; do
 		mkdir -p ../logs/$PLATFORM/$f/
 		if [ ! "$PACKAGES" ]; then
@@ -99,6 +103,7 @@ run_build(){
 	done
 	cd ../
 	# make repository
+	echo "Prepare repository \"$OUTPUT_DIR/packages/$ARCH_PKG/\""
 	ARCH_PKG=$(ls sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/)
 	mkdir -p $OUTPUT_DIR/packages/$ARCH_PKG/
 	# generate keys
@@ -114,6 +119,7 @@ run_build(){
 		cat  packages/$ARCH_PKG/${f}/Packages | gzip > packages/$ARCH_PKG/${f}/Packages.gz
 		# Sign repository
 		sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages -s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
+		echo "Repository $PLATFORM $SOC $ARCH_PKG $f created!"
 	done
 	# copy public key
 	cp keys/repo.pub $OUTPUT_DIR/packages/
