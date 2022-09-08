@@ -65,6 +65,7 @@ run_build(){
 		fi
 		rm *.tar.xz*
 		mv $(ls -d openwrt-sdk-*) sdk-$RELEASE-$PLATFORM-$SOC
+		export PATH=${PATH}:${PWD}/sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin
 	fi
 	# backup-restore feeds.conf.default
 	if [ -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak ]; then
