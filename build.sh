@@ -7,6 +7,8 @@
 RELEASE=21.02.3
 # Output directory
 OUTPUT_DIR="./"
+# Verbose log
+LOG=0
 
 # Script settings
 if [ -f packages.lst ]; then
@@ -54,7 +56,12 @@ run_build(){
 	if [ ! -d sdk-$RELEASE-$PLATFORM-$SOC ];  then
 		SDKFILE=$(curl -s https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/ --list-only | sed -e 's/<[^>]*>/ /g' | awk '/openwrt-sdk/{print $1}')
 		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE
-		tar xvf *.tar.xz*
+		if [ $LOG -eq 0 ]; then
+			echo -n "Unpack SDK."
+			tar xf *.tar.xz* && echo "Done!" || echo "Fail."
+		else
+			tar xvf *.tar.xz* 
+		fi
 		rm *.tar.xz*
 		mv $(ls -d openwrt-sdk-*) sdk-$RELEASE-$PLATFORM-$SOC
 	fi
@@ -67,8 +74,8 @@ run_build(){
 	for r in $FEEDS; do
 		FEED_NAME=$r
 		FEED_URL=$(cat feeds.cfg | grep -v '^#' | awk '{print $2}')
-	        echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
-        done
+		echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
+	done
 	# update feeds
 	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a
 	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a
@@ -82,7 +89,11 @@ run_build(){
 		fi
 		for p in $PACKAGES; do
 			if [ -n package/feeds/${f}/${p} ]; then
-				make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+				if [ $LOG -eq 1 ]; then
+					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+				else
+					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+				fi
 			fi
 		done
 	done
@@ -90,7 +101,6 @@ run_build(){
 	# make repository
 	ARCH_PKG=$(ls sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/)
 	mkdir -p $OUTPUT_DIR/packages/$ARCH_PKG/
-	mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/*/*/ $OUTPUT_DIR/packages/$ARCH_PKG/
 	# generate keys
 	if  [ ! -d keys ]; then
 		mkdir -p keys
@@ -99,6 +109,7 @@ run_build(){
 		cd ..
 	fi
 	for f in $FEEDS; do
+		mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
 		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh $OUTPUT_DIR/packages/$ARCH_PKG/$f/ >  $OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
 		cat  packages/$ARCH_PKG/${f}/Packages | gzip > packages/$ARCH_PKG/${f}/Packages.gz
 		# Sign repository
@@ -111,7 +122,7 @@ run_build(){
 
 # Remove sdk dir packages and logs
 clean_sdk(){
-	rm -rf sdk-*
+	rm -rf sdk-* openwrt-sdk-* $OUTPUT_DIR/packages/ logs/
 }
 
 # remove all 
@@ -133,7 +144,18 @@ case $1 in
 			PLATFORM=$t
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
-			clean_sdk
+		done
+	;;
+	-g)
+		if [ ! -f platforms.cfg ]; then
+			echo "`basename $0`: file platforms.cfg not found. Abort!"
+			exit 0
+		fi
+		for t in $TARGETS; do
+			PLATFORM=$t
+			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
+			run_build
+			rm -rf sdk-*
 		done
 	;;
 	-c) clean_sdk ;;
@@ -142,6 +164,7 @@ case $1 in
 		OPTIONS:\n\t \
 		-d -- install dependies\n\t \
 		-b -- build packages. \n\t \
+		-g -- build packages via clean every sdk dir\n\t
 		-c -- clean sdk\n\t \
 		-r -- remove sdk, packages, keys, dependies"
 	;;
