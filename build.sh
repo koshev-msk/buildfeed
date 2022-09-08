@@ -67,7 +67,7 @@ run_build(){
 		fi
 		rm *.tar.xz*
 		mv $(ls -d openwrt-sdk-*) sdk-$RELEASE-$PLATFORM-$SOC
-		export PATH=${PATH}:${PWD}/sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin
+		export PATH=${DEFPATH}:${PWD}/sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin
 	fi
 	# backup-restore feeds.conf.default
 	if [ -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak ]; then
@@ -144,7 +144,8 @@ clean_all(){
 	clean_dep
 	rm -rf logs/ keys/ dep_installed $OUTPUT_DIR/packages/
 }
-
+# Default env PATH
+DEFPATH=${PATH}
 # Menu actions select
 case $1 in
 	-d) install_dep ;;
