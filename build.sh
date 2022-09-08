@@ -153,13 +153,15 @@ case $1 in
 		fi
 		JOB=1
 		while read line; do
-			if [[ "$line" != \#* ]]; then
-				echo "======= JOB: $JOB ======="
-				PLATFORM=$(echo $line | awk '{print $1}')
-				SOC=$(echo $line | awk '{print $2}')
-				run_build
-				JOB=$(($JOB+1))
-			fi
+			case $line in
+			 	*#*) continue ;;
+				*)
+					echo "======= JOB: $JOB ======="
+					PLATFORM=$(echo $line | awk '{print $1}')
+					SOC=$(echo $line | awk '{print $2}')
+					run_build
+					JOB=$(($JOB+1))
+			esac
 		done  < platforms.cfg
 	;;
 	-g)
