@@ -153,7 +153,9 @@ case $1 in
 			echo "`basename $0`: file platforms.cfg not found. Abort!"
 			exit 0
 		fi
+		JOB=1
 		for t in $TARGETS; do
+			echo "======= JOB: $JOB ======="
 			PLATFORM=$t
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
@@ -164,7 +166,9 @@ case $1 in
 			echo "`basename $0`: file platforms.cfg not found. Abort!"
 			exit 0
 		fi
+		JOB=1
 		for t in $TARGETS; do
+			echo "======= JOB: $JOB ======="
 			PLATFORM=$t
 			SOC=$(cat platforms.cfg | grep $t | awk '{print $2}')
 			run_build
