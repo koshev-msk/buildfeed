@@ -78,7 +78,7 @@ run_build(){
 			echo -n "${PLATFORM}/${SOC}: unpack SDK archive."
 			tar xf *.tar.xz* && echo " Done!" || echo " Fail."
 		else
-			tar xvf *.tar.xz*  && return
+			tar xvf *.tar.xz*
 		fi
 		rm *.tar.xz*
 		mv $(ls -d openwrt-sdk-*) sdk-$RELEASE-$PLATFORM-$SOC
