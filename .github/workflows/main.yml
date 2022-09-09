@@ -38,7 +38,7 @@ jobs:
       - name: Build package feed
         run: |
           touch dep_installed
-          ./build.sh -g
+          ./build.sh -b
       - name: Assemble repository to artifact
         run: |
           rm -rf ./artifact/
