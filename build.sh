@@ -44,7 +44,7 @@ install_dep(){
 		_dep
 		touch dep_installed
 	else
-		echo "Dependies is installed. Run script with key -b"
+		echo "Dependies is installed. Run script with key -b or -B"
 	fi
 }
 
