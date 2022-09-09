@@ -72,8 +72,7 @@ run_build(){
 	if [ ! -d sdk-$RELEASE-$PLATFORM-$SOC ];  then
 		SDKFILE=$(curl -s https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/ --list-only | sed -e 's/<[^>]*>/ /g' | awk '/openwrt-sdk/{print $1}')
 		echo -n "${PLATFORM}/${SOC}: download $SDKFILE."
-		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE \
-		       	>/dev/null 2>&1 && echo " Done!" || echo " Fail."
+		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 		test -f $SDKFILE || return
 		if [ $LOG -lt 2 ]; then
 			echo -n "${PLATFORM}/${SOC}: unpack SDK archive."
@@ -87,11 +86,9 @@ run_build(){
 	fi
 	# backup-restore feeds.conf.default
 	if [ -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak ]; then
-		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak \
-			sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
+		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	else
- 		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default \
-			sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
+ 		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
 	fi
 	for r in $FEEDS; do
 		FEED_NAME=$r
@@ -100,11 +97,9 @@ run_build(){
 	done
 	# update and install feeds
 	echo -n "${PLATFORM}/${SOC}: update all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a \
-		>/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	echo -n "${PLATFORM}/${SOC}: install all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a \
-		>/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
@@ -116,7 +111,7 @@ run_build(){
 		if [ $LOG -ge 1 ]; then
 			mkdir -p ../logs/$PLATFORM/$f/
 		fi
-		if [ $PACKAGES -eq 0 ]; then
+		if [ $PACKAGES == 0 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
@@ -124,11 +119,9 @@ run_build(){
 				echo "${PLATFORM}/${SOC}: compile package: ${p}."
 				if [ $LOG -eq 2 ]; then
 					make -j$((`nproc`+1)) \
-						V=sc package/feeds/${f}/${p}/compile | \
-						tee ../logs/$PLATFORM/$f/build-${p}.log
+						V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
 				elif [ $LOG -eq 1 ]; then 
-					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | \
-						tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
 				else
 					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile
 				fi
@@ -144,38 +137,24 @@ run_build(){
 	if  [ ! -d keys ]; then
 		mkdir -p keys
 		cd keys
-		../sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign \
-			-G -s repo.key -p repo.pub
+		../sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -G -s repo.key -p repo.pub
 		cd ..
 	fi
 	for f in $FEEDS; do
-		case $1 in
-			-b)
-				mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ \
-					$OUTPUT_DIR/packages/$ARCH_PKG/
-			;;
-			-B)
-				cp -rp sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ \
-					$OUTPUT_DIR/packages/$ARCH_PKG/
-			;;
-		esac
-		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh \
-			$OUTPUT_DIR/packages/$ARCH_PKG/$f/ > \ 
-			$OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
-		cat  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages | \
-			gzip > $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.gz
+		#mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
+		cp -rp sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh $OUTPUT_DIR/packages/$ARCH_PKG/$f/ > $OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
+		cat  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages | gzip > $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.gz
 		if [ $SIGN -eq 1 ]; then
 		# Sign repository
-			sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign \
-				-S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages \
-				-s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
+			sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages -s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
 		fi
 		echo "${PLATFORM}/${SOC}: repository \"$OUTPUT_DIR/packages/$ARCH_PKG/$f\" created."
 	done
 	if [ $SIGN -eq 1 ]; then
 		# copy public key
-		cp keys/repo.pub $OUTPUT_DIR/packages/
-		"${PLATFORM}/${SOC}: repository \"$OUTPUT_DIR/packages/$ARCH_PKG/$f\" signed."
+		cp keys/repo.pub $OUTPUT_DIR/packages/ 
+		echo "${PLATFORM}/${SOC}: repository \"$OUTPUT_DIR/packages/$ARCH_PKG/$f\" signed."
 	fi
 }
 
