@@ -1,26 +1,37 @@
 #!/bin/sh
 
 # build system feeds package via OpenWrt SDK
-# Konstantine Shevlakov at <shevlakkov@132lan.ru> 2022
+# Konstantine Shevlakov at <shevlakov@132lan.ru> 2022
 
 # release OpenWrt
 RELEASE=21.02.3
 # Output directory
-#OUTPUT_DIR="./"
-OUTPUT_DIR="/home/sid//repo/packages/21.02/"
+OUTPUT_DIR="./"
 # Verbose log
-# 0 - no log file
+# 0 - no log
 # 1 - minimal log
 # 2 - verbose log
-LOG=0
+LOG=1
 # Include SDK feeds
+# 0 - not included SDK feeds
+# 1 - include SDK feeds
 SDK_FEEDS=0
 # Signing repository
+# 0 - No sign repo
+# 1 - sign repo
 SIGN=1
+# Build add packages
+# use selective packages in packages.lst
+# 1 - enable selective packages list
+# 0 - build all feed packages
+PACKAGES=1
 
+# Stuff
 # Script settings
-if [ -f packages.lst ]; then
-	PACKAGES="$(grep -v '^#' packages.lst)"
+if [ $PACKAGES -eq 1 ]; then
+	if [ -f packages.lst ]; then
+		PACKAGES="$(grep -v '^#' packages.lst)"
+	fi
 fi
 # repositories list
 FEEDS="$(grep -v '^#' feeds.cfg | awk '{print $1}')"
@@ -61,7 +72,8 @@ run_build(){
 	if [ ! -d sdk-$RELEASE-$PLATFORM-$SOC ];  then
 		SDKFILE=$(curl -s https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/ --list-only | sed -e 's/<[^>]*>/ /g' | awk '/openwrt-sdk/{print $1}')
 		echo -n "${PLATFORM}/${SOC}: download $SDKFILE."
-		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+		wget https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/$SDKFILE \
+		       	>/dev/null 2>&1 && echo " Done!" || echo " Fail."
 		test -f $SDKFILE || return
 		if [ $LOG -lt 2 ]; then
 			echo -n "${PLATFORM}/${SOC}: unpack SDK archive."
@@ -75,9 +87,11 @@ run_build(){
 	fi
 	# backup-restore feeds.conf.default
 	if [ -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak ]; then
-		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
+		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak \
+			sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	else
- 		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
+ 		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default \
+			sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
 	fi
 	for r in $FEEDS; do
 		FEED_NAME=$r
@@ -86,9 +100,11 @@ run_build(){
 	done
 	# update and install feeds
 	echo -n "${PLATFORM}/${SOC}: update all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a \
+		>/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	echo -n "${PLATFORM}/${SOC}: install all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a \
+		>/dev/null 2>&1 && echo " Done!" || echo " Fail."
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
@@ -97,17 +113,22 @@ run_build(){
 		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $1}')"
 	fi
 	for f in $FEEDS; do
-		mkdir -p ../logs/$PLATFORM/$f/
-		if [ ! "$PACKAGES" ]; then
+		if [ $LOG -ge 1 ]; then
+			mkdir -p ../logs/$PLATFORM/$f/
+		fi
+		if [ $PACKAGES -eq 0 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
 			if [ -n package/feeds/${f}/${p} ]; then
 				echo "${PLATFORM}/${SOC}: compile package: ${p}."
 				if [ $LOG -eq 2 ]; then
-					make -j$((`nproc`+1)) V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) \
+						V=sc package/feeds/${f}/${p}/compile | \
+						tee ../logs/$PLATFORM/$f/build-${p}.log
 				elif [ $LOG -eq 1 ]; then 
-					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | \
+						tee ../logs/$PLATFORM/$f/build-${p}.log
 				else
 					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile
 				fi
@@ -123,16 +144,31 @@ run_build(){
 	if  [ ! -d keys ]; then
 		mkdir -p keys
 		cd keys
-		../sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -G -s repo.key -p repo.pub
+		../sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign \
+			-G -s repo.key -p repo.pub
 		cd ..
 	fi
 	for f in $FEEDS; do
-		mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
-		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh $OUTPUT_DIR/packages/$ARCH_PKG/$f/ >  $OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
-		cat  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages | gzip > $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.gz
+		case $1 in
+			-b)
+				mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ \
+					$OUTPUT_DIR/packages/$ARCH_PKG/
+			;;
+			-B)
+				cp -rp sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ \
+					$OUTPUT_DIR/packages/$ARCH_PKG/
+			;;
+		esac
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh \
+			$OUTPUT_DIR/packages/$ARCH_PKG/$f/ > \ 
+			$OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
+		cat  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages | \
+			gzip > $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.gz
 		if [ $SIGN -eq 1 ]; then
 		# Sign repository
-			sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages -s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
+			sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign \
+				-S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages \
+				-s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
 		fi
 		echo "${PLATFORM}/${SOC}: repository \"$OUTPUT_DIR/packages/$ARCH_PKG/$f\" created."
 	done
@@ -160,7 +196,7 @@ DEFPATH=${PATH}
 # Menu actions select
 case $1 in
 	-d) install_dep ;;
-	-b)
+	-B)
 		if [ ! -f platforms.cfg ]; then
 			echo "`basename $0`: file platforms.cfg not found. Abort!"
 			exit 0
@@ -179,7 +215,7 @@ case $1 in
 			esac
 		done  < platforms.cfg
 	;;
-	-g)
+	-b)
 		if [ ! -f platforms.cfg ]; then
 			echo "`basename $0`: file platforms.cfg not found. Abort!"
 			exit 0
@@ -202,15 +238,14 @@ case $1 in
 	;;
 	-c) clean_sdk ;;
 	-r) clean_all ;;
-	*) echo "Usage:\n\t`basename $0` [OPTIONS]\n\t \
-		OPTIONS:\n\t \
-		-d -- install dependies\n\t \
-		-b -- build packages. \n\t \
-		-g -- build packages via clean every sdk dir.\n\t \
-		-c -- clean sdk.\n\t \
-		-r -- remove sdk, packages, keys, dependies."
+	*) echo "Usage:\n`basename $0` [OPTIONS]\n\
+\tOPTIONS:\n\t\
+-d -- install dependies\n\t\
+-B -- build packages. \n\t\
+-b -- build packages via clean every sdk dir.\n\t\
+-c -- clean sdk.\n\t\
+-r -- remove sdk, packages, keys, dependies."
 	;;
 esac
 # Restore env PATH
 export PATH=${DEFPATH}
-#
