@@ -109,7 +109,7 @@ run_build(){
 	fi
 	for f in $FEEDS; do
 		if [ $LOG -ge 1 ]; then
-			mkdir -p ../logs/$PLATFORM/$f/
+			mkdir -p ../logs/${PLATFORM}_${SOC}/$f/
 		fi
 		if [ $PACKAGES -eq 0 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
@@ -119,9 +119,9 @@ run_build(){
 				echo "${PLATFORM}/${SOC}: compile package: ${p}."
 				if [ $LOG -eq 2 ]; then
 					make -j$((`nproc`+1)) \
-						V=sc package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+						V=sc package/feeds/${f}/${p}/compile | tee ../logs/${PLATFORM}_${SOC}/$f/build-${p}.log
 				elif [ $LOG -eq 1 ]; then 
-					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/$PLATFORM/$f/build-${p}.log
+					make -j$((`nproc`+1)) V=0 package/feeds/${f}/${p}/compile | tee ../logs/${PLATFORM}_${SOC}/$f/build-${p}.log
 				else
 					make -j$((`nproc`+1)) package/feeds/${f}/${p}/compile
 				fi
