@@ -111,7 +111,7 @@ run_build(){
 		if [ $LOG -ge 1 ]; then
 			mkdir -p ../logs/$PLATFORM/$f/
 		fi
-		if [ $PACKAGES == 0 ]; then
+		if [ $PACKAGES -eq 0 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
