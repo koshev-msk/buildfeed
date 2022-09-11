@@ -5,7 +5,7 @@ luci-app-smstools3
 luci-app-modeminfo
 luci-app-mmconfig
 luci-app-cellled
-#luci-app-telegrembot
+#luci-app-telegrambot
 #luci-app-rtorrent
 #qtools
 #ethstatus
