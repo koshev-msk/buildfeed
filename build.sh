@@ -6,7 +6,7 @@
 # release OpenWrt
 RELEASE=21.02.3
 # Output directory
-OUTPUT_DIR="./"
+OUTPUT_DIR="/home/sid/repo/packages/21.02"
 # Verbose log
 # 0 - no log
 # 1 - minimal log
@@ -129,7 +129,7 @@ run_build(){
 		done
 	done
 	cd ../
-	# make repository
+	# make repository dir
 	ARCH_PKG=$(ls sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/)
 	echo "${PLATFORM}/${SOC}: prepare repository \"$OUTPUT_DIR/packages/$ARCH_PKG/\""
 	mkdir -p $OUTPUT_DIR/packages/$ARCH_PKG/
@@ -140,11 +140,13 @@ run_build(){
 		../sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -G -s repo.key -p repo.pub
 		cd ..
 	fi
+	# copy packages feed
 	for f in $FEEDS; do
-		#mv sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
 		cp -rp sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
-		sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh $OUTPUT_DIR/packages/$ARCH_PKG/$f/ > $OUTPUT_DIR/packages/$ARCH_PKG/$f/Packages
-		cat  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages | gzip > $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.gz
+		cd $OUTPUT_DIR/packages/$ARCH_PKG/${f}
+		${WORKDIR}/sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh ./ > Packages
+		cat  Packages | gzip > Packages.gz
+		cd $WORKDIR
 		if [ $SIGN -eq 1 ]; then
 		# Sign repository
 			sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin/usign -S -m $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages -s keys/repo.key  $OUTPUT_DIR/packages/$ARCH_PKG/${f}/Packages.sig
@@ -172,6 +174,7 @@ clean_all(){
 }
 # Default env PATH
 DEFPATH=${PATH}
+WORKDIR=${PWD}
 # Menu actions select
 case $1 in
 	-d) install_dep ;;
