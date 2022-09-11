@@ -6,7 +6,7 @@
 # release OpenWrt
 RELEASE=21.02.3
 # Output directory
-OUTPUT_DIR="/home/sid/repo/packages/21.02"
+OUTPUT_DIR="./"
 # Verbose log
 # 0 - no log
 # 1 - minimal log
