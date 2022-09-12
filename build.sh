@@ -22,16 +22,16 @@ SDK_FEEDS=0
 SIGN=1
 # Build add packages
 # use selective packages in packages.lst
-# 1 - enable selective packages list
-# 0 - build all feed packages
-PKG_FEEDS=1
+# 0 - enable selective packages list
+# 1 - build all feed packages
+PKG_FEEDS=0
 
 
 # Stuff
 
 # Script settings
 # user package list
-if [ $PKG_FEEDS -eq 1 ]; then
+if [ $PKG_FEEDS -eq 0 ]; then
 	if [ -f packages.lst ]; then
 		PACKAGES="$(grep -v '^#' packages.lst)"
 	else
@@ -69,7 +69,7 @@ _dep(){
 	swig time xsltproc zlib1g-dev wget curl
 }
 
-# Run build scanario
+# Run build scenario
 run_build(){
 	# check dependies
 	if [ ! -f dep_installed ]; then
@@ -128,7 +128,7 @@ run_build(){
 		if [ $LOG -ge 1 ]; then
 			mkdir -p ../logs/${PLATFORM}_${SOC}/$f/
 		fi
-		if [ $PKG_FEEDS -eq 0 ]; then
+		if [ $PKG_FEEDS -eq 1 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
