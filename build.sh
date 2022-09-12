@@ -107,13 +107,16 @@ run_build(){
 	done
 	# update and install feeds
 	if [ $LOG -lt 2 ]; then
-		LOG_PREFIX="-n"
-		LOG_SUFFIX="2>&1 && echo " Done!" || echo " Fail.""
+		echo -n "${PLATFORM}/${SOC}: update all SDK feeds."
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+		echo -n  "${PLATFORM}/${SOC}: install all SDK feeds."
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	else
+		echo "${PLATFORM}/${SOC}: update all SDK feeds."
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a
+		echo "${PLATFORM}/${SOC}: install all SDK feeds."
+		sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a
 	fi
-	echo $LOG_PREFIX "${PLATFORM}/${SOC}: update all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null $LOG_SUFFIX
-	echo $LOG_PREFIX "${PLATFORM}/${SOC}: install all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null $LOG_SUFFIX
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
