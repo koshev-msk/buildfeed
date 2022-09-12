@@ -106,7 +106,7 @@ run_build(){
 		echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	done
 	# update and install feeds
-	if [ $LOG -eq 2 ]; then
+	if [ $LOG -lt 2 ]; then
 		LOG_PREFIX="-n"
 		LOG_SUFFIX="2>&1 && echo " Done!" || echo " Fail.""
 	fi
