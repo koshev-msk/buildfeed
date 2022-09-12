@@ -105,13 +105,13 @@ run_build(){
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
 	make defconfig >/dev/null && echo " Done!" || echo " Fail."
 	if [ $SDK_FEEDS -eq 1 ]; then
-		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $1}')"
+		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $2}')"
 	fi
 	for f in $FEEDS; do
 		if [ $LOG -ge 1 ]; then
 			mkdir -p ../logs/${PLATFORM}_${SOC}/$f/
 		fi
-		if [ $PACKAGES -eq 0 ]; then
+		if [ "$PACKAGES" = "0" ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
