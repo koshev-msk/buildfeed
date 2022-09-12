@@ -24,16 +24,22 @@ SIGN=1
 # use selective packages in packages.lst
 # 1 - enable selective packages list
 # 0 - build all feed packages
-PACKAGES=1
+PKG_FEEDS=1
+
 
 # Stuff
+
 # Script settings
-if [ $PACKAGES -eq 1 ]; then
+# user package list
+if [ $PKG_FEEDS -eq 1 ]; then
 	if [ -f packages.lst ]; then
 		PACKAGES="$(grep -v '^#' packages.lst)"
+	else
+		echo "packages.lst not found. Abort!"
+		exit 0
 	fi
 fi
-# repositories list
+# user repositories list
 FEEDS="$(grep -v '^#' feeds.cfg | awk '{print $1}')"
 
 # install packages on deb-based host system
@@ -65,10 +71,12 @@ _dep(){
 
 # Run build scanario
 run_build(){
+	# check dependies
 	if [ ! -f dep_installed ]; then
 		echo "Dependies is NOT installed. First run script with key -d"
 		exit 0
 	fi
+	# download and unpack SDK
 	if [ ! -d sdk-$RELEASE-$PLATFORM-$SOC ];  then
 		SDKFILE=$(curl -s https://downloads.openwrt.org/releases/$RELEASE/targets/$PLATFORM/$SOC/ --list-only | sed -e 's/<[^>]*>/ /g' | awk '/openwrt-sdk/{print $1}')
 		echo -n "${PLATFORM}/${SOC}: download $SDKFILE."
@@ -82,24 +90,30 @@ run_build(){
 		fi
 		rm *.tar.xz*
 		mv $(ls -d openwrt-sdk-*) sdk-$RELEASE-$PLATFORM-$SOC
-		export PATH=${DEFPATH}:${PWD}/sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin
 	fi
+	# export SDK path
+	export PATH=${DEFPATH}:${PWD}/sdk-$RELEASE-$PLATFORM-$SOC/staging_dir/host/bin
 	# backup-restore feeds.conf.default
 	if [ -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak ]; then
 		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	else
  		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
 	fi
+	# add user feed
 	for r in $FEEDS; do
 		FEED_NAME=$r
 		FEED_URL=$(cat feeds.cfg | grep -v '^#' | awk '{print $2}')
 		echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 	done
 	# update and install feeds
-	echo -n "${PLATFORM}/${SOC}: update all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
-	echo -n "${PLATFORM}/${SOC}: install all SDK feeds."
-	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null 2>&1 && echo " Done!" || echo " Fail."
+	if [ $LOG - lt 2 ]; then
+		LOG_PREFIX="-n"
+		LOG_SUFFIX="2>&1 && echo " Done!" || echo " Fail.""
+	fi
+	echo $LOG_PREFIX "${PLATFORM}/${SOC}: update all SDK feeds."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds update -a >/dev/null $LOG_SUFFIX
+	echo $LOG_PREFIX "${PLATFORM}/${SOC}: install all SDK feeds."
+	sdk-$RELEASE-$PLATFORM-$SOC/scripts/feeds install -a >/dev/null $LOG_SUFFIX
 	# build packages
 	cd sdk-$RELEASE-$PLATFORM-$SOC
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
@@ -111,7 +125,7 @@ run_build(){
 		if [ $LOG -ge 1 ]; then
 			mkdir -p ../logs/${PLATFORM}_${SOC}/$f/
 		fi
-		if [ "$PACKAGES" = "0" ]; then
+		if [ $PKG_FEEDS -eq 0 ]; then
 			PACKAGES=$(ls -1 package/feeds/${f}/)
 		fi
 		for p in $PACKAGES; do
