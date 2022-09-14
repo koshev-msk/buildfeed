@@ -66,7 +66,7 @@ _dep(){
 	gettext git java-propose-classpath libelf-dev libncurses5-dev \
 	libncursesw5-dev libssl-dev python python2.7-dev python3 unzip curl \
 	python-distutils-extra python3-setuptools python3-dev rsync \
-	swig time xsltproc zlib1g-dev wget curl
+	swig time xsltproc zlib1g-dev wget
 }
 
 # Run build scenario
@@ -100,10 +100,14 @@ run_build(){
  		cp -f sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default.bak
 	fi
 	# add user feed
-	for r in $FEEDS; do
-		FEED_NAME=$r
-		FEED_URL=$(cat feeds.cfg | grep -v '^#' | awk '{print $2}')
-		echo "src-git $FEED_NAME $FEED_URL" >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
+	while read line; do
+		case $line in
+			*#*) continue ;;
+			*)
+				set -- $line
+				echo "$line"  >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
+			;;
+		esac
 	done
 	# update and install feeds
 	if [ $LOG -lt 2 ]; then
@@ -161,6 +165,18 @@ run_build(){
 	for f in $FEEDS; do
 		cp -rp sdk-$RELEASE-$PLATFORM-$SOC/bin/packages/$ARCH_PKG/$f/ $OUTPUT_DIR/packages/$ARCH_PKG/
 		cd $OUTPUT_DIR/packages/$ARCH_PKG/${f}
+		# find and remove duplicate packages
+		if [ -f Packages ]; then
+			PKG_REPO=$(awk '/Package/{print $2}' Packages)
+			for pkg in $PKG_REPO; do
+				CNT=$(ls ${pkg}_* | wc -l)
+				if [ $CNT -ge 2 ]; then
+					VER=$(grep -A2 -i "$pkg" Packages | awk '/Version/{print $2}')
+					echo "${PLATFORM}/${SOC}: Package ${pkg} duplicate. Oldversion ${VER} remove."
+					rm ${pkg}*${VER}*
+				fi
+			done
+		fi
 		${WORKDIR}/sdk-$RELEASE-$PLATFORM-$SOC/scripts/ipkg-make-index.sh ./ > Packages
 		cat  Packages | gzip > Packages.gz
 		cd $WORKDIR
