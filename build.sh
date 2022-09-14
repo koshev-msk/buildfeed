@@ -40,7 +40,7 @@ if [ $PKG_FEEDS -eq 0 ]; then
 	fi
 fi
 # user repositories list
-FEEDS="$(grep -v '^#' feeds.cfg | awk '{print $1}')"
+FEEDS="$(grep -v '^#' feeds.cfg | awk '{print $2}')"
 
 # install packages on deb-based host system
 install_dep(){
