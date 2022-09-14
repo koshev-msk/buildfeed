@@ -104,11 +104,10 @@ run_build(){
 		case $line in
 			*#*) continue ;;
 			*)
-				set -- $line
 				echo "$line"  >> sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default
 			;;
 		esac
-	done
+	done < feeds.cfg
 	# update and install feeds
 	if [ $LOG -lt 2 ]; then
 		echo -n "${PLATFORM}/${SOC}: update all SDK feeds."
