@@ -5,6 +5,8 @@ luci-app-smstools3
 luci-app-modeminfo
 luci-app-mmconfig
 luci-app-cellled
+openvpn-dns-hotplug
+totd
 #luci-app-telegrambot
 #luci-app-rtorrent
 #qtools
