@@ -48,5 +48,5 @@ jobs:
       - name: Upload repository to artifact
         uses: actions/upload-artifact@master
         with:
-          name: openwrt-repository
+          name: modemfeed-openwrt-repo
           path: ./artifact/
