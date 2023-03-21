@@ -17,5 +17,5 @@ luci-app-modeminfo
 #asterisk-chan-quectel
 #mrtg
 #nload
-#atinout
+atinout
 #speedtestpp
