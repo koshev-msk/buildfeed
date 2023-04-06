@@ -1,8 +1,8 @@
 #luci-app-3proxy
 #luci-app-pingcontrol
 #luci-app-atinout
-luci-app-smstools3
-luci-app-modeminfo
+#luci-app-smstools3
+#luci-app-modeminfo
 #luci-app-mmconfig
 #luci-app-cellled
 #openvpn-dns-hotplug
@@ -19,3 +19,4 @@ luci-app-modeminfo
 #nload
 #atinout
 #speedtestpp
+ttymux
