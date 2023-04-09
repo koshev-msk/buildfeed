@@ -2,7 +2,7 @@
 #luci-app-pingcontrol
 #luci-app-atinout
 #luci-app-smstools3
-#luci-app-modeminfo
+luci-app-modeminfo
 #luci-app-mmconfig
 #luci-app-cellled
 #openvpn-dns-hotplug
@@ -11,7 +11,7 @@
 #luci-app-rtorrent
 #qtools
 #ethstatus
-xmm-modem
+#xmm-modem
 #luci-theme-lightblue
 #luci-theme-teleofis
 #asterisk-chan-quectel
