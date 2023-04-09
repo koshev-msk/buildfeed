@@ -11,7 +11,7 @@
 #luci-app-rtorrent
 #qtools
 #ethstatus
-#xmm-modem
+xmm-modem
 #luci-theme-lightblue
 #luci-theme-teleofis
 #asterisk-chan-quectel
@@ -19,4 +19,4 @@
 #nload
 #atinout
 #speedtestpp
-ttymux
+#ttymux
