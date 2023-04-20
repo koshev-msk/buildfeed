@@ -125,7 +125,7 @@ run_build(){
 	echo -n "${PLATFORM}/${SOC}: prepare compile packages."
 	make defconfig >/dev/null && echo " Done!" || echo " Fail."
 	if [ $SDK_FEEDS -eq 1 ]; then
-		FEEDS="$(grep -v '^#' sdk-$RELEASE-$PLATFORM-$SOC/feeds.conf.default | awk '{print $2}')"
+		FEEDS="$(grep -v '^#' feeds.conf.default | awk '{print $2}')"
 	fi
 	for f in $FEEDS; do
 		if [ $LOG -ge 1 ]; then
