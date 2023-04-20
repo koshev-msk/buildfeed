@@ -44,7 +44,9 @@ jobs:
           rm -rf ./artifact/
           mkdir -p ./artifact/
           cp -rp ./packages/ ./artifact/
-          cp -rp ./logs/ ./artifact/
+          if [ -d ./logs/ ]; then
+            cp -rp ./logs/ ./artifact/
+          fi
       - name: Upload repository to artifact
         uses: actions/upload-artifact@master
         with:
