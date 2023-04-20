@@ -11,7 +11,7 @@ OUTPUT_DIR="./"
 # 0 - no log
 # 1 - minimal log
 # 2 - verbose log
-LOG=1
+LOG=2
 # Include SDK feeds
 # 0 - not included SDK feeds
 # 1 - include SDK feeds
