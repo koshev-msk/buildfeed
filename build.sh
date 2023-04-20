@@ -15,7 +15,7 @@ LOG=1
 # Include SDK feeds
 # 0 - not included SDK feeds
 # 1 - include SDK feeds
-SDK_FEEDS=0
+SDK_FEEDS=1
 # Signing repository
 # 0 - No sign repo
 # 1 - sign repo
