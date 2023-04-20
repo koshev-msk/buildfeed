@@ -4,7 +4,7 @@
 # Konstantine Shevlakov at <shevlakov@132lan.ru> 2022
 
 # release OpenWrt
-RELEASE=21.02.3
+RELEASE=21.02.6
 # Output directory
 OUTPUT_DIR="./"
 # Verbose log
