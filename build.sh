@@ -11,11 +11,11 @@ OUTPUT_DIR="./"
 # 0 - no log
 # 1 - minimal log
 # 2 - verbose log
-LOG=2
+LOG=1
 # Include SDK feeds
 # 0 - not included SDK feeds
 # 1 - include SDK feeds
-SDK_FEEDS=1
+SDK_FEEDS=0
 # Signing repository
 # 0 - No sign repo
 # 1 - sign repo
